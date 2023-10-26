@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Smart Irrigation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Irrigation System</h1>
+    <p>Temperature: <span id="temp"></span> &deg;C</p>
+    <p>Humidity: <span id="hum"></span>%</p>
+    <p>Soil Moisture: <span id="moist"></span></p>
+    <p>Relay Status: <span id="relay"></span></p>
+    
+    <button onclick="toggleRelay()">Override Control</button>
+    
+    <script>
+        function updateValues(temp, hum, moist, relay) {
+            document.getElementById("temp").innerHTML = temp;
+            document.getElementById("hum").innerHTML = hum;
+            document.getElementById("moist").innerHTML = moist;
+            document.getElementById("relay").innerHTML = relay;
+        }
+
+        function toggleRelay() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://localhost:3000/override", true);
+            xhttp.send();
+        }
+    </script>
+</body>
+</html>
