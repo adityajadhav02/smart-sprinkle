@@ -56,5 +56,5 @@ void loop() {
   
   sendSensorData(temperature, humidity, moisture, relayState);
   
-  delay(1000); // Send data every 10 seconds
+  delay(1000); // Send data every second
 }
