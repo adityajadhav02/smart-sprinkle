@@ -1,5 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
+#include <ESP8266HTTPClient.h>
+// #include<HTTPClient.h>
 
 #define DHTPIN D2
 #define DHTTYPE DHT11
@@ -8,7 +10,7 @@
 
 const char* ssid = "Note8";
 const char* password = "aditya123";
-const char* server = "192.168.5.19";
+const char* server = " 192.168.88.108";
 const int port = 3000;
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -40,34 +42,68 @@ void sendSensorData(float temperature, float humidity, int moisture, int relaySt
   }
 }
 
+// void checkOverrideStatus() {
+//   HTTPClient http;
+
+//   String url = "http://192.168.1.100:3000/getOverrideStatus"; // Replace with your laptop's local IP address
+
+//   http.begin(url);
+//   int httpCode = http.GET();
+
+//   if (httpCode > 0) {
+//     if (httpCode == HTTP_CODE_OK) {
+//       String payload = http.getString();
+//       if (payload == "ON") {
+//         // Handle the case when override is ON
+//         // For example, you can turn off the relay
+//         digitalWrite(RELAYPIN, LOW);
+//       } else if (payload == "OFF") {
+//         // Handle the case when override is OFF
+//         // For example, you can use the existing logic to control the relay
+//         float temperature = dht.readTemperature();
+//         float humidity = dht.readHumidity();
+//         int moisture = analogRead(MOISTUREPIN);
+//         int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
+//         digitalWrite(RELAYPIN, relayState);
+//       }
+//     }
+//   }
+
+//   http.end();
+// }
+
 void checkOverrideStatus() {
-  HTTPClient http;
+  WiFiClient client;
 
-  String url = "http://192.168.1.100:3000/getOverrideStatus"; // Replace with your laptop's local IP address
+  if (client.connect("192.168.1.100", 3000)) {
+    client.print("GET /getOverrideStatus HTTP/1.1\r\n");
+    client.print("Host: 192.168.1.100\r\n");
+    client.print("Connection: close\r\n\r\n");
 
-  http.begin(url);
-  int httpCode = http.GET();
-
-  if (httpCode > 0) {
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      if (payload == "ON") {
-        // Handle the case when override is ON
-        // For example, you can turn off the relay
-        digitalWrite(RELAYPIN, LOW);
-      } else if (payload == "OFF") {
-        // Handle the case when override is OFF
-        // For example, you can use the existing logic to control the relay
-        float temperature = dht.readTemperature();
-        float humidity = dht.readHumidity();
-        int moisture = analogRead(MOISTUREPIN);
-        int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
-        digitalWrite(RELAYPIN, relayState);
+    while (client.connected()) {
+      String line = client.readStringUntil('\n');
+      if (line == "\r") {
+        break;
       }
     }
-  }
 
-  http.end();
+    String payload = client.readStringUntil('\n');
+    if (payload == "ON") {
+      // Handle the case when override is ON
+      // For example, you can turn off the relay
+      digitalWrite(RELAYPIN, LOW);
+    } else if (payload == "OFF") {
+      // Handle the case when override is OFF
+      // For example, you can use the existing logic to control the relay
+      float temperature = dht.readTemperature();
+      float humidity = dht.readHumidity();
+      int moisture = analogRead(MOISTUREPIN);
+      int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
+      digitalWrite(RELAYPIN, relayState);
+    }
+
+    client.stop();
+  }
 }
 
 void loop() {
@@ -87,5 +123,4 @@ void loop() {
   
   sendSensorData(temperature, humidity, moisture, relayState);
   
-  delay(1000); // Send data every second
 }
