@@ -24,21 +24,54 @@
     <p>Soil Moisture: <span id="moist"></span></p>
     <p>Relay Status: <span id="relay"></span></p>
     
-    <button onclick="toggleRelay()">Override Control</button>
+    <button onclick="override()">Override Control</button>
     
-    <script>
-        function updateValues(temp, hum, moist, relay) {
-            document.getElementById("temp").innerHTML = temp;
-            document.getElementById("hum").innerHTML = hum;
-            document.getElementById("moist").innerHTML = moist;
-            document.getElementById("relay").innerHTML = relay;
-        }
 
-        function toggleRelay() {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "http://localhost:3000/override", true);
-            xhttp.send();
+<script>
+    function override() {
+      const url = 'http://192.168.119.108:3000/override';
+
+      fetch(url, {
+        method: 'GET',
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
         }
-    </script>
+        // Handle response if needed
+        console.log('Server pinged successfully');
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+    }
+
+
+    function fetchData(){
+      fetch('http://192.168.119.108:3000/sendData')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json(); // Assuming response is JSON data
+    })
+    .then(data => {
+      document.getElementById("temp").innerHTML = data.temperature + ' &deg;C';
+      document.getElementById("hum").innerHTML = data.humidity + '%';
+      document.getElementById("moist").innerHTML = data.moisture;
+      document.getElementById("relay").innerHTML = data.relayState;
+      // console.log(data);
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+  }
+
+    setInterval(() => {
+        if(typeof window !== "undefined")
+        fetchData()
+    }, 1000)
+</script>
+
 </body>
 </html>

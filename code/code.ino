@@ -3,14 +3,14 @@
 #include <ESP8266HTTPClient.h>
 // #include<HTTPClient.h>
 
-#define DHTPIN D2
+#define DHTPIN D3
 #define DHTTYPE DHT11
 #define MOISTUREPIN A0
 #define RELAYPIN D1
 
 const char* ssid = "Note8";
 const char* password = "aditya123";
-const char* server = " 192.168.88.108";
+const char* server = "192.168.119.108";
 const int port = 3000;
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -28,6 +28,9 @@ void setup() {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("Connected!");
+  }
 }
 
 void sendSensorData(float temperature, float humidity, int moisture, int relayState) {
@@ -40,42 +43,25 @@ void sendSensorData(float temperature, float humidity, int moisture, int relaySt
     delay(10);
     client.stop();
   }
+  else{
+    String url = "/update?temp=" + String(temperature) + "&hum=" + String(humidity) + "&moist=" + String(moisture) + "&relay=" + String(relayState);
+    
+    Serial.print("[sendSensorData] Connection failed. Error code: ");
+  Serial.println(client.status());
+  Serial.print("Failed to connect to ");
+Serial.print(server);
+Serial.print(" on port ");
+Serial.println(port);
+Serial.println(url);
+
+  }
 }
 
-// void checkOverrideStatus() {
-//   HTTPClient http;
-
-//   String url = "http://192.168.1.100:3000/getOverrideStatus"; // Replace with your laptop's local IP address
-
-//   http.begin(url);
-//   int httpCode = http.GET();
-
-//   if (httpCode > 0) {
-//     if (httpCode == HTTP_CODE_OK) {
-//       String payload = http.getString();
-//       if (payload == "ON") {
-//         // Handle the case when override is ON
-//         // For example, you can turn off the relay
-//         digitalWrite(RELAYPIN, LOW);
-//       } else if (payload == "OFF") {
-//         // Handle the case when override is OFF
-//         // For example, you can use the existing logic to control the relay
-//         float temperature = dht.readTemperature();
-//         float humidity = dht.readHumidity();
-//         int moisture = analogRead(MOISTUREPIN);
-//         int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
-//         digitalWrite(RELAYPIN, relayState);
-//       }
-//     }
-//   }
-
-//   http.end();
-// }
 
 void checkOverrideStatus() {
   WiFiClient client;
 
-  if (client.connect("192.168.1.100", 3000)) {
+  if (client.connect("192.168.119.108", 3000)) {
     client.print("GET /getOverrideStatus HTTP/1.1\r\n");
     client.print("Host: 192.168.1.100\r\n");
     client.print("Connection: close\r\n\r\n");
@@ -107,10 +93,10 @@ void checkOverrideStatus() {
 }
 
 void loop() {
-  checkOverrideStatus();
+  // checkOverrideStatus();
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
-  int moisture = analogRead(MOISTUREPIN);
+  int moisture = 1024-analogRead(MOISTUREPIN);
   
   int relayState = LOW;
   if (temperature > 28 && moisture < 500) {
@@ -120,7 +106,7 @@ void loop() {
     relayState = LOW;
     digitalWrite(RELAYPIN, LOW);
   }
-  
+  Serial.println("Temp: " + String(temperature) + "Humidity: " + String(humidity) + "Moisture: "+ String(moisture));
   sendSensorData(temperature, humidity, moisture, relayState);
   
 }
