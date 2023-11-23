@@ -10,7 +10,7 @@
 
 const char* ssid = "Note8";
 const char* password = "aditya123";
-const char* server = "192.168.119.108";
+const char* server = "192.168.221.108";
 const int port = 3000;
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -19,6 +19,7 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
+  pinMode(DHTPIN, INPUT);
   pinMode(MOISTUREPIN, INPUT);
   pinMode(RELAYPIN, OUTPUT);
 
@@ -61,9 +62,9 @@ Serial.println(url);
 void checkOverrideStatus() {
   WiFiClient client;
 
-  if (client.connect("192.168.119.108", 3000)) {
+  if (client.connect("192.168.221.108", 3000)) {
     client.print("GET /getOverrideStatus HTTP/1.1\r\n");
-    client.print("Host: 192.168.1.100\r\n");
+    client.print("Host: 192.168.221.108\r\n");
     client.print("Connection: close\r\n\r\n");
 
     while (client.connected()) {
@@ -72,40 +73,47 @@ void checkOverrideStatus() {
         break;
       }
     }
-
+    String response = "";
     String payload = client.readStringUntil('\n');
-    if (payload == "ON") {
-      // Handle the case when override is ON
-      // For example, you can turn off the relay
-      digitalWrite(RELAYPIN, LOW);
-    } else if (payload == "OFF") {
-      // Handle the case when override is OFF
-      // For example, you can use the existing logic to control the relay
-      float temperature = dht.readTemperature();
-      float humidity = dht.readHumidity();
-      int moisture = analogRead(MOISTUREPIN);
-      int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
-      digitalWrite(RELAYPIN, relayState);
+    while(client.available()){
+      char c = client.read();
+      response += c;
     }
-
     client.stop();
+    Serial.println(response);
+    // if (payload == "ON") {
+    //   // Handle the case when override is ON
+    //   // For example, you can turn off the relay
+    //   digitalWrite(RELAYPIN, LOW);
+    // } else if (payload == "OFF") {
+    //   // Handle the case when override is OFF
+    //   // For example, you can use the existing logic to control the relay
+    //   float temperature = dht.readTemperature();
+    //   float humidity = dht.readHumidity();
+    //   int moisture = analogRead(MOISTUREPIN);
+    //   int relayState = (temperature > 28 && moisture < 500) ? HIGH : LOW;
+    //   digitalWrite(RELAYPIN, relayState);
+    // }
+
+    // client.stop();
   }
 }
+int relayState = LOW;
 
 void loop() {
-  // checkOverrideStatus();
+  checkOverrideStatus();
   float temperature = dht.readTemperature();
-  float humidity = dht.readHumidity();
+  float humidity = dht.readHumidity()-100;
   int moisture = 1024-analogRead(MOISTUREPIN);
   
-  int relayState = LOW;
-  if (temperature > 28 && moisture < 500) {
+  if (temperature > 10 && moisture < 100) {
     relayState = HIGH;
     digitalWrite(RELAYPIN, HIGH);
   } else {
     relayState = LOW;
     digitalWrite(RELAYPIN, LOW);
   }
+  
   Serial.println("Temp: " + String(temperature) + "Humidity: " + String(humidity) + "Moisture: "+ String(moisture));
   sendSensorData(temperature, humidity, moisture, relayState);
   

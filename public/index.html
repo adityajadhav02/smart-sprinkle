@@ -4,18 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Smart Irrigation System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
     <h1>Smart Irrigation System</h1>
@@ -23,13 +12,14 @@
     <p>Humidity: <span id="hum"></span>%</p>
     <p>Soil Moisture: <span id="moist"></span></p>
     <p>Relay Status: <span id="relay"></span></p>
+    <p>Pump: <span id=""></p>
     
     <button onclick="override()">Override Control</button>
     
 
 <script>
     function override() {
-      const url = 'http://192.168.119.108:3000/override';
+      const url = 'http://192.168.221.108:3000/override';
 
       fetch(url, {
         method: 'GET',
@@ -48,19 +38,18 @@
 
 
     function fetchData(){
-      fetch('http://192.168.119.108:3000/sendData')
+      fetch('http://192.168.221.108:3000/sendData')
     .then(response => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.json(); // Assuming response is JSON data
+      return response.json(); 
     })
-    .then(data => {
-      document.getElementById("temp").innerHTML = data.temperature + ' &deg;C';
-      document.getElementById("hum").innerHTML = data.humidity + '%';
+    .then((data) => {
+      document.getElementById("temp").innerHTML = data.temperature;
+      document.getElementById("hum").innerHTML = data.humidity;
       document.getElementById("moist").innerHTML = data.moisture;
-      document.getElementById("relay").innerHTML = data.relayState;
-      // console.log(data);
+      document.getElementById("relay").innerHTML = data.relay;
     })
     .catch(error => {
       console.error('There was a problem with the fetch operation:', error);
@@ -69,8 +58,8 @@
 
     setInterval(() => {
         if(typeof window !== "undefined")
-        fetchData()
-    }, 1000)
+        fetchData();
+    }, 100)
 </script>
 
 </body>
